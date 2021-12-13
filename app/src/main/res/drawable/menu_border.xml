@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <solid android:color="#FFFFFF" />
+            <stroke
+                android:width="5dp"
+                android:color="#000000" />
+            <padding
+                android:bottom="5dp"
+                android:left="2dp"
+                android:right="2dp"
+                android:top="5dp" />
+        </shape>
+    </item>
+    <item>
+        <inset>
+            <selector>
+                <item
+                    android:drawable="@color/purple_200"
+                    android:state_focused="true" />
+                <item
+                    android:drawable="@color/purple_200"
+                    android:state_pressed="true" />
+                <item
+                    android:drawable="@color/purple_200"
+                    android:state_selected="true" />
+                <item android:drawable="@color/menu_purple" />
+            </selector>
+        </inset>
+    </item>
+</layer-list>

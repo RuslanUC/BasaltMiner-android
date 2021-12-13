@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_activity"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:ignore="MissingConstraints">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".4">
+
+            <ImageView
+                android:id="@+id/menu_goldBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:onClick="showGoldMenu"
+                android:src="@color/menu_purple" />
+
+            <TextView
+                android:id="@+id/goldCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="58dp"
+                android:text="0"
+                android:textColor="#ffffff"
+                android:textSize="25dp" />
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:src="@drawable/gold" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".2">
+
+            <ImageView
+                android:id="@+id/menu_lvlBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:src="@color/menu_purple"
+                android:onClick="showLevelMenu"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:text="LEVEL"
+                android:textColor="#80ffffff"
+                android:textSize="20dp" />
+
+            <TextView
+                android:id="@+id/level"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|center_horizontal"
+                android:layout_marginBottom="10dp"
+                android:text="0"
+                android:textColor="#ffffff"
+                android:textSize="40dp" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".4">
+
+            <ImageView
+                android:id="@+id/menu_redstoneBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:onClick="showRedstoneMenu"
+                android:src="@color/menu_purple" />
+
+            <TextView
+                android:id="@+id/redstoneCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|right"
+                android:layout_marginRight="66dp"
+                android:text="0"
+                android:textColor="#ffffff"
+                android:textSize="25dp" />
+
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right"
+                android:layout_marginRight="10dp"
+                android:src="@drawable/redstone" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/blockLayout"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center_horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="MissingConstraints">
+
+        <ImageView
+            android:id="@+id/block"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:background="#FFFFFFFF" />
+    </FrameLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:ignore="MissingConstraints">
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".2">
+
+            <ImageView
+                android:id="@+id/menu_worldsBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:src="@color/menu_purple"
+                android:onClick="showWorldsMenu"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:src="@drawable/worlds" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".2">
+
+            <ImageView
+                android:id="@+id/menu_shopBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:src="@color/menu_purple"
+                android:onClick="showShopMenu"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:src="@drawable/shop" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".2">
+
+            <ImageView
+                android:id="@+id/menu_duelsBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:src="@color/menu_purple"
+                android:onClick="showDuelMenu"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:src="@drawable/duels" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".2">
+
+            <ImageView
+                android:id="@+id/menu_topBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:src="@color/menu_purple"
+                android:onClick="showTopMenu"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:src="@drawable/top" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight=".2">
+
+            <ImageView
+                android:id="@+id/menu_settingsBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/menu_border"
+                android:src="@color/menu_purple"
+                android:onClick="showSettingsMenu"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:src="@drawable/settings" />
+        </FrameLayout>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

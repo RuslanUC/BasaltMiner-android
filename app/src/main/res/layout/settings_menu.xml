@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settings_menu"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#22333b"
+    android:orientation="vertical"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="0dp"
+    app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+
+    <ScrollView
+        android:id="@+id/sm_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/sm_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center_horizontal"
+                android:text="Настройки"
+                android:textColor="@android:color/white"
+                android:textSize="70dp" /> <!-- Title -->
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="25dp"
+                android:layout_weight="1" /> <!-- Padding -->
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button"
+                android:text="Акак"
+                android:textSize="20dp"
+                android:id="@+id/sm_howtoButton"
+                android:onClick="settingsButton"/> <!-- How to -->
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="10dp"
+                android:layout_weight="1" /> <!-- Padding -->
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button"
+                android:text="FAQ"
+                android:textSize="20dp"
+                android:id="@+id/sm_faqButton"
+                android:onClick="settingsButton"/> <!-- FAQ -->
+
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

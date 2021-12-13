@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.rdev.basaltminer.MainActivity">
+
+    <include layout="@layout/activity_main" />
+
+    <include layout="@layout/gold_menu" />
+
+    <include layout="@layout/redstone_menu" />
+
+    <include layout="@layout/level_menu" />
+
+    <include layout="@layout/settings_menu" />
+
+    <include layout="@layout/howto_menu" />
+
+    <include layout="@layout/faq_menu" />
+
+    <include layout="@layout/worlds_menu" />
+
+    <include layout="@layout/top_menu" />
+
+    <include layout="@layout/duel_menu" />
+
+    <include layout="@layout/shop_menu" />
+
+</android.support.design.widget.CoordinatorLayout>

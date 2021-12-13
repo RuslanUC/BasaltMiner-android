@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<item
+    android:left="20dp"
+    android:right="20dp"
+    android:id="@+id/menu_bg_item">
+
+    <shape>
+        <solid android:color="#f2edd7" />
+        <corners android:radius="10dp"/>
+    </shape>
+</item>
+</layer-list>
