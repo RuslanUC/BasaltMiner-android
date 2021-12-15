@@ -4,10 +4,14 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -26,6 +30,7 @@ import okhttp3.Response;
 
 public class StartActivity extends AppCompatActivity {
     private WebView webView;
+    private WebView loadingWebView;
     private SharedPreferences prefs;
 
     @Override
@@ -35,6 +40,13 @@ public class StartActivity extends AppCompatActivity {
         setContentView(R.layout.activity_start);
 
         webView = findViewById(R.id.webView);
+        loadingWebView = findViewById(R.id.loadingWebView);
+        loadingWebView.getSettings().setJavaScriptEnabled(true);
+        loadingWebView.setWebViewClient(new WebViewClient());
+        loadingWebView.addJavascriptInterface(new WebAppInterface(), "Android");
+        loadingWebView.loadUrl("file:///android_asset/index.html");
+        loadingWebView.setBackgroundColor(Color.parseColor("#80000000"));
+
         webView.getSettings().setJavaScriptEnabled(true);
         if (android.os.Build.VERSION.SDK_INT >= 21) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
@@ -54,6 +66,12 @@ public class StartActivity extends AppCompatActivity {
             }
 
             public void onPageFinished(WebView view, String url) {
+                StartActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        loadingWebView.setVisibility(View.INVISIBLE);
+                    }
+                });
                 if (!url.contains("twitch.tv"))
                     webView.loadUrl("https://twitch.tv/login");
                 String token = getCookie("https://twitch.tv", "auth-token");
@@ -63,6 +81,16 @@ public class StartActivity extends AppCompatActivity {
                     editor.apply();
                     start();
                 }
+            }
+
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                StartActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        loadingWebView.loadUrl("file:///android_asset/index.html");
+                        loadingWebView.setVisibility(View.VISIBLE);
+                    }
+                });
             }
         });
 
@@ -164,5 +192,17 @@ public class StartActivity extends AppCompatActivity {
             }
         }
         return CookieValue;
+    }
+
+    public class WebAppInterface {
+        @JavascriptInterface
+        public void hideLoading() {
+            StartActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    loadingWebView.setVisibility(View.INVISIBLE);
+                }
+            });
+        }
     }
 }
