@@ -23,8 +23,8 @@
     </div>
 
     <br>
-    <b><h1 style="color:white;" class="loadingH">Загрузка...</h1></b>
-    <p style="color:#ffffff;">Пожалуйста, подождите, идёт загрузка.</p>
+    <b><h1 style="color:white;" class="loadingH" id="loading1">Загрузка...</h1></b>
+    <p style="color:#ffffff;" id="loading2">Пожалуйста, подождите, идёт загрузка.</p>
     <br><br>
     <p style="color:#ffffff;display:none;opacity:0;" id="closeW">Если всё загрузилось, но это окно не пропало, нажмите сюда.</p>
     <script>
@@ -45,12 +45,23 @@
             var closeW = document.getElementById("closeW");
             setTimeout(() => {
                 unfade(closeW);
-            }, 1000);
+            }, 10000);
             closeW.onclick = function() {
                 Android.hideLoading();
             };
         }
 
+        function fail() {
+            var tid = setInterval(function () {
+                if (document.readyState !== 'complete') return;
+                clearInterval(tid);
+
+                var closeW = document.getElementById("closeW");
+                closeW.parentNode.removeChild(closeW);
+                document.getElementById("loading1").innerHTML = "Ошибка!";
+                document.getElementById("loading2").innerHTML = "Произошла ошибка. Текст и код ошибки вы можете увидеть в уведомлении.";
+            }, 100);
+        }
     </script>
 </center>
 </body>

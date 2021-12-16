@@ -1,6 +1,8 @@
 package com.rdev.basaltminer;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -12,6 +14,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -19,6 +22,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -42,6 +46,8 @@ import java.util.Map;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
 
 public class GameClient {
     private final String jwt;
@@ -838,7 +844,7 @@ public class GameClient {
         });
     }
 
-    public void auth() {
+    public void auth(Runnable doneRunnable, Runnable failRunnable) {
         makeRequest("ext/auth", new YEPRunnable() {
             @Override
             public void run() {
@@ -859,6 +865,7 @@ public class GameClient {
                 setBackground();
                 setBlock();
                 setValues();
+                doneRunnable.run();
             }
         }, new YEPRunnable() {
             @Override
@@ -866,9 +873,19 @@ public class GameClient {
                 ctx.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(ctx, "[5] Не удалось авторизоваться, код: " + resp.code(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ctx, "[5] Не удалось авторизоваться, код: " + resp.code(), Toast.LENGTH_LONG).show();
+
+                        Notification notification = new NotificationCompat.Builder(ctx)
+                                        .setSmallIcon(R.mipmap.ic_launcher)
+                                        .setContentTitle("Произошла ошибка!")
+                                        .setContentText("Код ошибки: 5, код ответа: " + resp.code())
+                                .build();
+
+                        NotificationManager notificationManager = (NotificationManager) ctx.getSystemService(NOTIFICATION_SERVICE);
+                        notificationManager.notify(1, notification);
                     }
                 });
+                failRunnable.run();
             }
         });
     }

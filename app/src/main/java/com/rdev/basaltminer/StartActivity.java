@@ -10,6 +10,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
@@ -66,12 +68,7 @@ public class StartActivity extends AppCompatActivity {
             }
 
             public void onPageFinished(WebView view, String url) {
-                StartActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        loadingWebView.setVisibility(View.INVISIBLE);
-                    }
-                });
+                hideLoading();
                 if (!url.contains("twitch.tv"))
                     webView.loadUrl("https://twitch.tv/login");
                 String token = getCookie("https://twitch.tv", "auth-token");
@@ -87,8 +84,7 @@ public class StartActivity extends AppCompatActivity {
                 StartActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        loadingWebView.loadUrl("file:///android_asset/index.html");
-                        loadingWebView.setVisibility(View.VISIBLE);
+                        showLoading();
                     }
                 });
             }
@@ -197,12 +193,32 @@ public class StartActivity extends AppCompatActivity {
     public class WebAppInterface {
         @JavascriptInterface
         public void hideLoading() {
-            StartActivity.this.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    loadingWebView.setVisibility(View.INVISIBLE);
-                }
-            });
+            StartActivity.this.hideLoading();
         }
+    }
+
+    private void hideLoading() {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+                anim.setDuration(1000);
+                loadingWebView.startAnimation(anim);
+                loadingWebView.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    private void showLoading() {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                loadingWebView.loadUrl("file:///android_asset/index.html");
+                loadingWebView.setVisibility(View.VISIBLE);
+                AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+                anim.setDuration(1000);
+                loadingWebView.startAnimation(anim);
+            }
+        });
     }
 }

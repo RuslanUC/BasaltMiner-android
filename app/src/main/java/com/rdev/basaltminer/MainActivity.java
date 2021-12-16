@@ -10,21 +10,32 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.webkit.ConsoleMessage;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 @SuppressLint("ClickableViewAccessibility")
 public class MainActivity extends AppCompatActivity {
     private EditText dlogin;
     private GameClient gclient;
+    private WebView loadingWebView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +43,22 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.coord_layout);
+
+        loadingWebView = findViewById(R.id.loadingWebView);
+        loadingWebView.getSettings().setJavaScriptEnabled(true);
+        loadingWebView.setWebViewClient(new WebViewClient());
+        loadingWebView.addJavascriptInterface(new WebAppInterface(), "Android");
+        loadingWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Log.d("MyApplication", consoleMessage.message() + " -- From line "
+                        + consoleMessage.lineNumber() + " of "
+                        + consoleMessage.sourceId());
+                return super.onConsoleMessage(consoleMessage);
+            }
+        });
+        loadingWebView.loadUrl("file:///android_asset/index.html");
+        loadingWebView.setBackgroundColor(Color.parseColor("#80000000"));
 
         String jwt = getIntent().getExtras().getString("jwt");
 
@@ -67,7 +94,27 @@ public class MainActivity extends AppCompatActivity {
 
         gclient.initViews(layout, gold, redstone, level, block, blockl);
         gclient.initMenus(gmenu, lmenu, fmenu, wmenu, tmenu, dmenu, shmenu);
-        gclient.auth();
+        gclient.auth(new Runnable() {
+            @Override
+            public void run() {
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        hideLoading();
+                    }
+                });
+            }
+        },new Runnable() {
+            @Override
+            public void run() {
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showLoading(false);
+                    }
+                });
+            }
+        });
     }
 
     public void showGoldMenu(View v) {
@@ -186,5 +233,58 @@ public class MainActivity extends AppCompatActivity {
 
     public void showShopMenu(View v) {
         gclient.loadShopMenu();
+    }
+
+    private class WebAppInterface {
+        @JavascriptInterface
+        public void hideLoading() {
+            MainActivity.this.hideLoading();
+        }
+    }
+
+    private void hideLoading() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+                anim.setDuration(1000);
+                loadingWebView.startAnimation(anim);
+                loadingWebView.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    private void showLoading(boolean success) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                loadingWebView.loadUrl("file:///android_asset/index.html");
+                loadingWebView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public void onPageFinished(WebView web, String url) {
+                        if(!success)
+                            web.loadUrl("javascript:fail()");
+                    }
+                });
+                if(!success) {
+                    loadingWebView.setOnLongClickListener(new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View v) {
+                            return true;
+                        }
+                    });
+                    loadingWebView.setLongClickable(false);
+                    loadingWebView.setHapticFeedbackEnabled(false);
+                }
+                loadingWebView.setVisibility(View.VISIBLE);
+                AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+                anim.setDuration(1000);
+                loadingWebView.startAnimation(anim);
+            }
+        });
+    }
+
+    private void showLoading() {
+        showLoading(true);
     }
 }
