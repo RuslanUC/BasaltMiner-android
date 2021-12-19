@@ -59,6 +59,14 @@ public class MainActivity extends AppCompatActivity {
         });
         loadingWebView.loadUrl("file:///android_asset/index.html");
         loadingWebView.setBackgroundColor(Color.parseColor("#80000000"));
+        loadingWebView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                return true;
+            }
+        });
+        loadingWebView.setLongClickable(false);
+        loadingWebView.setHapticFeedbackEnabled(false);
 
         String jwt = getIntent().getExtras().getString("jwt");
 
@@ -92,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        gclient.initViews(layout, gold, redstone, level, block, blockl);
+        gclient.initViews(layout, gold, redstone, level, block, blockl, loadingWebView);
         gclient.initMenus(gmenu, lmenu, fmenu, wmenu, tmenu, dmenu, shmenu);
         gclient.auth(new Runnable() {
             @Override
@@ -266,16 +274,6 @@ public class MainActivity extends AppCompatActivity {
                             web.loadUrl("javascript:fail()");
                     }
                 });
-                if(!success) {
-                    loadingWebView.setOnLongClickListener(new View.OnLongClickListener() {
-                        @Override
-                        public boolean onLongClick(View v) {
-                            return true;
-                        }
-                    });
-                    loadingWebView.setLongClickable(false);
-                    loadingWebView.setHapticFeedbackEnabled(false);
-                }
                 loadingWebView.setVisibility(View.VISIBLE);
                 AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
                 anim.setDuration(1000);

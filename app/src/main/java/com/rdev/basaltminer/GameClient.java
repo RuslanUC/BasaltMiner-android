@@ -22,7 +22,9 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -87,6 +89,7 @@ public class GameClient {
     private TextView lvlTV;
     private TextView redstoneTV;
     private ImageView blockIV;
+    private WebView loadingWebView;
 
     private LinearLayout goldMenu;
     private TextView gm_boostInfo;
@@ -131,12 +134,13 @@ public class GameClient {
         this.k = 128.0 / (context.getWindowManager().getDefaultDisplay().getHeight() / 4);
     }
 
-    public void initViews(ConstraintLayout gameCL, TextView goldTV, TextView redstoneTV, TextView lvlTV, ImageView blockIV, FrameLayout blockFL) {
+    public void initViews(ConstraintLayout gameCL, TextView goldTV, TextView redstoneTV, TextView lvlTV, ImageView blockIV, FrameLayout blockFL, WebView loadingWebView) {
         this.gameCL = gameCL;
         this.goldTV = goldTV;
         this.redstoneTV = redstoneTV;
         this.lvlTV = lvlTV;
         this.blockIV = blockIV;
+        this.loadingWebView = loadingWebView;
     }
 
     public void initMenus(LinearLayout goldMenu, LinearLayout levelMenu, LinearLayout faqMenu, LinearLayout worldsMenu, LinearLayout topMenu, LinearLayout duelMenu, LinearLayout shopMenu) {
@@ -844,6 +848,35 @@ public class GameClient {
         });
     }
 
+    private void hideLoading() {
+        ctx.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(loadingWebView.getVisibility() == View.INVISIBLE)
+                    return;
+                AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
+                anim.setDuration(500);
+                loadingWebView.startAnimation(anim);
+                loadingWebView.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    private void showLoading() {
+        ctx.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(loadingWebView.getVisibility() == View.VISIBLE)
+                    return;
+                loadingWebView.loadUrl("file:///android_asset/index.html");
+                loadingWebView.setVisibility(View.VISIBLE);
+                AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
+                anim.setDuration(500);
+                loadingWebView.startAnimation(anim);
+            }
+        });
+    }
+
     public void auth(Runnable doneRunnable, Runnable failRunnable) {
         makeRequest("ext/auth", new YEPRunnable() {
             @Override
@@ -892,6 +925,7 @@ public class GameClient {
 
     @SuppressLint("SetTextI18n")
     public void loadGoldMenu() {
+        showLoading();
         makeRequest("upgrade/income", new YEPRunnable() {
             @Override
             public void run() {
@@ -929,6 +963,7 @@ public class GameClient {
                         gm_streamersInfo.setText("Стримеры приносят: \n" + finalIncome + " золота/мин.");
                     }
                 });
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -939,11 +974,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[7] Не удалось получить данные, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void loadLevelMenu() {
+        showLoading();
         makeRequest("upgrade/level", new YEPRunnable() {
             @Override
             public void run() {
@@ -969,6 +1006,7 @@ public class GameClient {
                     }
                 });
                 updateLevelMenu();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -979,11 +1017,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[8] Не удалось получить данные, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void upgradeLevel() {
+        showLoading();
         makeRequest("upgrade/levelup", new YEPRunnable() {
             @Override
             public void run() {
@@ -1015,6 +1055,7 @@ public class GameClient {
                 }
                 setValues();
                 updateLevelMenu();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1025,11 +1066,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[9] Не удалось повысить уровень, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void upgradeBiba() {
+        showLoading();
         makeRequest("upgrade/bibaup", new YEPRunnable() {
             @Override
             public void run() {
@@ -1059,6 +1102,7 @@ public class GameClient {
                 }
                 setValues();
                 updateLevelMenu();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1069,6 +1113,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[11] Не удалось повысить уровень, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
@@ -1161,6 +1206,7 @@ public class GameClient {
     }
 
     public void loadFaqMenu() {
+        showLoading();
         makeRequest("upgrade/faq", new YEPRunnable() {
             @Override
             public void run() {
@@ -1200,6 +1246,7 @@ public class GameClient {
                         BottomSheetBehavior.from(faqMenu).setState(BottomSheetBehavior.STATE_EXPANDED);
                     }
                 });
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1210,11 +1257,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[17] Не удалось получить данные, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void loadWorldsMenu() {
+        showLoading();
         makeRequest("world/list", new YEPRunnable() {
             @Override
             public void run() {
@@ -1268,6 +1317,7 @@ public class GameClient {
                         wm_behaviour.setState(BottomSheetBehavior.STATE_EXPANDED);
                     }
                 });
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1278,11 +1328,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[18] Не удалось получить данные, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void loadTopMenu() {
+        showLoading();
         makeRequest("top/list", new YEPRunnable() {
             @Override
             public void run() {
@@ -1292,6 +1344,7 @@ public class GameClient {
                     e.printStackTrace();
                 }
                 loadTop(0);
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1302,6 +1355,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[20] Не удалось получить данные, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
@@ -1326,6 +1380,11 @@ public class GameClient {
     }
 
     public void loadDuelMenu() {
+        if(level < 10) {
+            Toast.makeText(ctx, "Уровень должен быть больше 10!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        showLoading();
         makeRequest("duel/menu", new YEPRunnable() {
             @Override
             public void run() {
@@ -1343,6 +1402,7 @@ public class GameClient {
                 }
                 setDuelsG();
                 setDuels();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1353,6 +1413,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[20] Не удалось получить данные, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
         dm_behaviour.setState(BottomSheetBehavior.STATE_EXPANDED);
@@ -1382,6 +1443,7 @@ public class GameClient {
     }
 
     public void sendRandomDuel() {
+        showLoading();
         makeRequest("duel/rnd", new YEPRunnable() {
             @Override
             public void run() {
@@ -1411,6 +1473,7 @@ public class GameClient {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1421,11 +1484,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[24] Не удалось отправить запрос, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void sendDuel(String login) {
+        showLoading();
         makeRequest("duel/send?login=" + login, new YEPRunnable() {
             @Override
             public void run() {
@@ -1457,6 +1522,7 @@ public class GameClient {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1467,11 +1533,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[26] Не удалось отправить запрос, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void loadShopMenu() {
+        showLoading();
         makeRequest("upgrade/list", new YEPRunnable() {
             @Override
             public void run() {
@@ -1481,6 +1549,7 @@ public class GameClient {
                     e.printStackTrace();
                 }
                 setStreamersList();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1491,6 +1560,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[27] Не удалось получить данные, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
         sm_behaviour.setState(BottomSheetBehavior.STATE_EXPANDED);
