@@ -514,8 +514,8 @@ public class GameClient {
     }
 
     private boolean checkTouch(MotionEvent ev) {
-        double xk = Math.min((int) ev.getX() * k, x + 18 * k) / (double) Math.max((int) ev.getX() * k, x + 18 * k);
-        double yk = Math.min((int) ev.getY() * k, y + 18 * k) / (double) Math.max((int) ev.getY() * k, y + 18 * k);
+        double xk = Math.min((int) ev.getX() * k, x + 18 * k) / Math.max((int) ev.getX() * k, x + 18 * k);
+        double yk = Math.min((int) ev.getY() * k, y + 18 * k) / Math.max((int) ev.getY() * k, y + 18 * k);
 
         return xk >= 0.85 && yk >= 0.85;
     }
