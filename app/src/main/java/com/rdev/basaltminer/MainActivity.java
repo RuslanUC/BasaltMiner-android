@@ -48,15 +48,6 @@ public class MainActivity extends AppCompatActivity {
         loadingWebView.getSettings().setJavaScriptEnabled(true);
         loadingWebView.setWebViewClient(new WebViewClient());
         loadingWebView.addJavascriptInterface(new WebAppInterface(), "Android");
-        loadingWebView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Log.d("MyApplication", consoleMessage.message() + " -- From line "
-                        + consoleMessage.lineNumber() + " of "
-                        + consoleMessage.sourceId());
-                return super.onConsoleMessage(consoleMessage);
-            }
-        });
         loadingWebView.loadUrl("file:///android_asset/index.html");
         loadingWebView.setBackgroundColor(Color.parseColor("#80000000"));
         loadingWebView.setOnLongClickListener(new View.OnLongClickListener() {
