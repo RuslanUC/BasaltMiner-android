@@ -58,6 +58,8 @@ public class GameClient {
     private boolean isTouched = false;
     private int d = 0;
     private final double k;
+    private double bk = 1;
+    private long _bk;
 
     private long count;
     private int world;
@@ -287,6 +289,7 @@ public class GameClient {
                 isTouched = true;
             else
                 return;
+            _bk = System.currentTimeMillis();
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
             d = 0;
             isTouched = false;
@@ -305,15 +308,18 @@ public class GameClient {
                 d += 1;
                 if (d > 10) {
                     d = 0;
+                    if(bk == 1 && System.currentTimeMillis()-_bk > breakTime) {
+                        bk = breakTime/(double)(System.currentTimeMillis()-_bk);
+                    }
                     blockBreaked();
                     clearD();
                     return;
                 }
                 drawD();
-                handler.postDelayed(this, breakTime / 10);
+                handler.postDelayed(this, (long)(breakTime*bk / 10));
             }
         };
-        handler.postDelayed(runnable, breakTime / 10);
+        handler.postDelayed(runnable, (long)(breakTime*bk / 10));
     }
 
     private void makeRequest(String path, YEPRunnable doneCallback, YEPRunnable failCallback) {

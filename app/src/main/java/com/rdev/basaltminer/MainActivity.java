@@ -1,6 +1,7 @@
 package com.rdev.basaltminer;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -10,16 +11,14 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
-import android.webkit.ConsoleMessage;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
-import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
@@ -27,9 +26,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @SuppressLint("ClickableViewAccessibility")
 public class MainActivity extends AppCompatActivity {
@@ -103,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
-        },new Runnable() {
+        }, new Runnable() {
             @Override
             public void run() {
                 MainActivity.this.runOnUiThread(new Runnable() {
@@ -114,6 +110,11 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     public void showGoldMenu(View v) {
@@ -261,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
                 loadingWebView.setWebViewClient(new WebViewClient() {
                     @Override
                     public void onPageFinished(WebView web, String url) {
-                        if(!success)
+                        if (!success)
                             web.loadUrl("javascript:fail()");
                     }
                 });
