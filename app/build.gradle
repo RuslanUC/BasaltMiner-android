@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.rdev.basaltminer"
-        minSdkVersion 19
+        minSdkVersion 21
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 28
         versionCode 2
