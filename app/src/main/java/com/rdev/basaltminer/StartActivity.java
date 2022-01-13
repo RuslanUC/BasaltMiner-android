@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
@@ -23,6 +22,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -41,7 +42,6 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
 
-        webView = findViewById(R.id.webView);
         loadingWebView = findViewById(R.id.loadingWebView);
         loadingWebView.getSettings().setJavaScriptEnabled(true);
         loadingWebView.setWebViewClient(new WebViewClient());
@@ -49,12 +49,25 @@ public class StartActivity extends AppCompatActivity {
         loadingWebView.loadUrl("file:///android_asset/index.html");
         loadingWebView.setBackgroundColor(Color.parseColor("#80000000"));
 
-        webView.getSettings().setJavaScriptEnabled(true);
+        webView = findViewById(R.id.webView);
+        Matcher m = Pattern.compile("Chrome\\/\\d+").matcher(webView.getSettings().getUserAgentString());
+        if (m.find()) {
+            int ver = Integer.parseInt(m.group().replace("Chrome/", ""));
+            if (ver < 74) {
+                Toast.makeText(getApplicationContext(), "Внимание! Версия webview ниже 74, а именно " + ver + ".\n" +
+                        "Авторизация может работать неправильно.\n" +
+                        "Пожалуйста, обновите webview.", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Не удалось проверить версию webview.\n" +
+                    "Авторизация может работать неправильно.", Toast.LENGTH_SHORT).show();
+        }
         if (android.os.Build.VERSION.SDK_INT >= 21) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         } else {
             CookieManager.getInstance().setAcceptCookie(true);
         }
+        webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -107,7 +120,7 @@ public class StartActivity extends AppCompatActivity {
             public void run() {
                 String jwt = "";
                 OkHttpClient client = new OkHttpClient();
-                RequestBody body = RequestBody.create(MediaType.parse("application/json"), "[{\"operationName\":\"ExtensionsForChannel\",\"variables\":{\"channelID\":\""+CONFIG.streamer_id+"\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"37a5969f117f2f76bc8776a0b216799180c0ce722acb92505c794a9a4f9737e7\"}}}]");
+                RequestBody body = RequestBody.create(MediaType.parse("application/json"), "[{\"operationName\":\"ExtensionsForChannel\",\"variables\":{\"channelID\":\"" + CONFIG.streamer_id + "\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"37a5969f117f2f76bc8776a0b216799180c0ce722acb92505c794a9a4f9737e7\"}}}]");
                 Request request = new Request.Builder()
                         .url("https://gql.twitch.tv/gql")
                         .addHeader("Authorization", "OAuth " + token)
