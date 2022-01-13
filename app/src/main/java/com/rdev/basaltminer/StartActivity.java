@@ -107,7 +107,7 @@ public class StartActivity extends AppCompatActivity {
             public void run() {
                 String jwt = "";
                 OkHttpClient client = new OkHttpClient();
-                RequestBody body = RequestBody.create(MediaType.parse("application/json"), "[{\"operationName\":\"ExtensionsForChannel\",\"variables\":{\"channelID\":\"629832951\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"37a5969f117f2f76bc8776a0b216799180c0ce722acb92505c794a9a4f9737e7\"}}}]");
+                RequestBody body = RequestBody.create(MediaType.parse("application/json"), "[{\"operationName\":\"ExtensionsForChannel\",\"variables\":{\"channelID\":\""+CONFIG.streamer_id+"\"},\"extensions\":{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"37a5969f117f2f76bc8776a0b216799180c0ce722acb92505c794a9a4f9737e7\"}}}]");
                 Request request = new Request.Builder()
                         .url("https://gql.twitch.tv/gql")
                         .addHeader("Authorization", "OAuth " + token)
