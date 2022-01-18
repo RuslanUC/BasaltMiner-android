@@ -1,8 +1,13 @@
 package com.rdev.basaltminer;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -10,6 +15,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
@@ -24,7 +30,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -42,8 +47,11 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -134,6 +142,7 @@ public class GameClient {
         this.jwt = jwt;
         this.ctx = context;
         this.k = 128.0 / (context.getWindowManager().getDefaultDisplay().getHeight() / 4);
+        checkUpdates();
     }
 
     public void initViews(ConstraintLayout gameCL, TextView goldTV, TextView redstoneTV, TextView lvlTV, ImageView blockIV, FrameLayout blockFL, WebView loadingWebView) {
@@ -308,18 +317,18 @@ public class GameClient {
                 d += 1;
                 if (d > 10) {
                     d = 0;
-                    if(bk == 1 && System.currentTimeMillis()-_bk > breakTime) {
-                        bk = breakTime/(double)(System.currentTimeMillis()-_bk);
+                    if (bk == 1 && System.currentTimeMillis() - _bk > breakTime) {
+                        bk = breakTime / (double) (System.currentTimeMillis() - _bk);
                     }
                     blockBreaked();
                     clearD();
                     return;
                 }
                 drawD();
-                handler.postDelayed(this, (long)(breakTime*bk / 10));
+                handler.postDelayed(this, (long) (breakTime * bk / 10));
             }
         };
-        handler.postDelayed(runnable, (long)(breakTime*bk / 10));
+        handler.postDelayed(runnable, (long) (breakTime * bk / 10));
     }
 
     private void makeRequest(String path, YEPRunnable doneCallback, YEPRunnable failCallback) {
@@ -333,7 +342,11 @@ public class GameClient {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                OkHttpClient client = new OkHttpClient();
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .connectTimeout(20, TimeUnit.SECONDS)
+                        .writeTimeout(10, TimeUnit.SECONDS)
+                        .readTimeout(10, TimeUnit.SECONDS)
+                        .build();
                 Request request = new Request.Builder()
                         .url(CONFIG.host + finalPath)
                         .addHeader("x-extension-jwt", jwt)
@@ -414,8 +427,8 @@ public class GameClient {
 
     private void drawD() {
         try {
-            Bitmap point = drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("point1.png"), null));
-            Bitmap db = drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("blocks/d" + d + ".png"), null));
+            Bitmap point = Bitmap.createScaledBitmap(drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("point1.png"), null)), 16, 16, false);
+            Bitmap db = Bitmap.createScaledBitmap(drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("blocks/d" + d + ".png"), null)), 128, 128, false);
             Bitmap bl = Bitmap.createScaledBitmap(drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("blocks/" + block + ".png"), null)), 128, 128, false);
             bl = bl.copy(bl.getConfig(), true);
             Canvas canv = new Canvas(bl);
@@ -429,7 +442,7 @@ public class GameClient {
 
     private void clearD() {
         try {
-            Bitmap point = drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("point1.png"), null));
+            Bitmap point = Bitmap.createScaledBitmap(drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("point1.png"), null)), 16, 16, false);
             Bitmap bl = Bitmap.createScaledBitmap(drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("blocks/" + block + ".png"), null)), 128, 128, false);
             bl = bl.copy(bl.getConfig(), true);
             Canvas canv = new Canvas(bl);
@@ -449,7 +462,7 @@ public class GameClient {
             @Override
             public void run() {
                 try {
-                    Bitmap point = drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("point1.png"), null));
+                    Bitmap point = Bitmap.createScaledBitmap(drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("point1.png"), null)), 16, 16, false);
                     Bitmap bl = Bitmap.createScaledBitmap(drawableToBitmap(Drawable.createFromStream(ctx.getAssets().open("blocks/" + block + ".png"), null)), 128, 128, false);
                     bl = bl.copy(bl.getConfig(), true);
                     x = (int) (getRandomNumber() * bl.getWidth());
@@ -504,7 +517,7 @@ public class GameClient {
                 lm_strength.setText(strengthLevel + " Сила");
                 lm_dexterity.setText(dexterityLevel + " Ловкость");
                 lm_intelligence.setText(intelligenceLevel + " Интеллект");
-                lm_statsText.setText(((statpoints > 0) ? "("+statpoints+") Характеристики:" : "Характеристики:"));
+                lm_statsText.setText(((statpoints > 0) ? "(" + statpoints + ") Характеристики:" : "Характеристики:"));
                 if (statpoints > 0) {
                     lm_strengthBtn.setVisibility(View.VISIBLE);
                     lm_dexterityBtn.setVisibility(View.VISIBLE);
@@ -775,7 +788,7 @@ public class GameClient {
 
                         TextView streamerTV = new TextView(ctx);
                         streamerTV.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                        streamerTV.setText(streamers.getJSONArray(finalI).getString(2) + ((streamers.getJSONArray(finalI).getInt(1) != 0) ? " "+streamers.getJSONArray(finalI).getString(1) : ""));
+                        streamerTV.setText(streamers.getJSONArray(finalI).getString(2) + ((streamers.getJSONArray(finalI).getInt(1) != 0) ? " " + streamers.getJSONArray(finalI).getString(1) : ""));
                         streamerTV.setTextColor(Color.parseColor("#000000"));
                         streamerTV.setTextSize(20);
                         tlay.addView(streamerTV);
@@ -784,7 +797,7 @@ public class GameClient {
                         t = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                         t.setMargins(getSizeInDP(10), 0, 0, 0);
                         earnTV.setLayoutParams(t);
-                        earnTV.setText(((!streamers.getJSONArray(finalI).getString(5).equals("0")) ? streamers.getJSONArray(finalI).getString(5)+"->"+streamers.getJSONArray(finalI).getString(6) : "0->"+streamers.getJSONArray(finalI).getString(6))+"/мин");
+                        earnTV.setText(((!streamers.getJSONArray(finalI).getString(5).equals("0")) ? streamers.getJSONArray(finalI).getString(5) + "->" + streamers.getJSONArray(finalI).getString(6) : "0->" + streamers.getJSONArray(finalI).getString(6)) + "/мин");
                         earnTV.setTextColor(Color.parseColor("#000000"));
                         earnTV.setTextSize(10);
                         tlay.addView(earnTV);
@@ -858,7 +871,7 @@ public class GameClient {
         ctx.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(loadingWebView.getVisibility() == View.INVISIBLE)
+                if (loadingWebView.getVisibility() == View.INVISIBLE)
                     return;
                 AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
                 anim.setDuration(500);
@@ -872,7 +885,7 @@ public class GameClient {
         ctx.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(loadingWebView.getVisibility() == View.VISIBLE)
+                if (loadingWebView.getVisibility() == View.VISIBLE)
                     return;
                 loadingWebView.loadUrl("file:///android_asset/index.html");
                 loadingWebView.setVisibility(View.VISIBLE);
@@ -881,6 +894,63 @@ public class GameClient {
                 loadingWebView.startAnimation(anim);
             }
         });
+    }
+
+    private void checkUpdates() {
+        if (!CONFIG.check_updates)
+            return;
+        SharedPreferences prefs = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE);
+        if (!prefs.getBoolean("askForUpdates", true))
+            return;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                OkHttpClient client = new OkHttpClient();
+                Request request = new Request.Builder()
+                        .url("https://api.github.com/repos/" + CONFIG.github_repo + "/releases")
+                        .build();
+
+                Response response;
+                try {
+                    response = client.newCall(request).execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                JSONArray releases;
+                try {
+                    releases = new JSONArray(response.body().string());
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                List<bmVersion> versions = new ArrayList<>();
+                for (int i = 0; i < releases.length(); i++) {
+                    try {
+                        JSONObject ver = releases.getJSONObject(i);
+                        JSONObject apk = ver.getJSONArray("assets").getJSONObject(0);
+                        bmVersion bmv = new bmVersion(ver.getString("tag_name"), ver.getString("body"), ver.getBoolean("prerelease"), apk.getString("browser_download_url"), apk.getLong("size"));
+                        if(bmv.isBeta() && !prefs.getBoolean("askForBetaUpdates", false))
+                            continue;
+                        if(bmv.isNewerThanCurrent())
+                            versions.add(bmv);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                }
+                if(versions.size() == 0)
+                    return;
+                Collections.sort(versions);
+                bmVersion lastVersion = versions.get(versions.size()-1);
+                ctx.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        lastVersion.buildWindow(prefs).show();
+                    }
+                });
+            }
+        }).start();
     }
 
     public void auth(Runnable doneRunnable, Runnable failRunnable) {
@@ -915,9 +985,9 @@ public class GameClient {
                         Toast.makeText(ctx, "[5] Не удалось авторизоваться, код: " + resp.code(), Toast.LENGTH_LONG).show();
 
                         Notification notification = new NotificationCompat.Builder(ctx)
-                                        .setSmallIcon(R.mipmap.ic_launcher)
-                                        .setContentTitle("Произошла ошибка!")
-                                        .setContentText("Код ошибки: 5, код ответа: " + resp.code())
+                                .setSmallIcon(R.mipmap.ic_launcher)
+                                .setContentTitle("Произошла ошибка!")
+                                .setContentText("Код ошибки: 5, код ответа: " + resp.code())
                                 .build();
 
                         NotificationManager notificationManager = (NotificationManager) ctx.getSystemService(NOTIFICATION_SERVICE);
@@ -1386,7 +1456,7 @@ public class GameClient {
     }
 
     public void loadDuelMenu() {
-        if(level < 10) {
+        if (level < 10) {
             Toast.makeText(ctx, "Уровень должен быть больше 10!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -1573,7 +1643,7 @@ public class GameClient {
     }
 
     public void buyStreamer(int streamerID) {
-        makeRequest("upgrade/streamerup?id="+streamerID, new YEPRunnable() {
+        makeRequest("upgrade/streamerup?id=" + streamerID, new YEPRunnable() {
             @Override
             public void run() {
                 try {
@@ -1614,5 +1684,94 @@ public class GameClient {
                 });
             }
         });
+    }
+
+    private class bmVersion implements Comparable<bmVersion> {
+        private String versionString;
+        private String changeLog;
+        private boolean beta;
+        private String apkUrl;
+        private long size;
+
+        public bmVersion(String versionString, String changeLog, boolean isBeta, String apkUrl, long size) {
+            this.versionString = versionString;
+            this.changeLog = changeLog;
+            this.beta = isBeta;
+            this.apkUrl = apkUrl;
+            this.size = size;
+        }
+
+        public bmVersion(String versionString) {
+            this.versionString = versionString;
+        }
+
+        public final String get() {
+            return this.versionString;
+        }
+
+        @Override
+        public int compareTo(bmVersion that) {
+            if (that == null)
+                return 1;
+            String[] thisParts = this.get().split("\\.");
+            String[] thatParts = that.get().split("\\.");
+            int length = Math.max(thisParts.length, thatParts.length);
+            for (int i = 0; i < length; i++) {
+                int thisPart = i < thisParts.length ?
+                        Integer.parseInt(thisParts[i]) : 0;
+                int thatPart = i < thatParts.length ?
+                        Integer.parseInt(thatParts[i]) : 0;
+                if (thisPart < thatPart)
+                    return -1;
+                if (thisPart > thatPart)
+                    return 1;
+            }
+            return 0;
+        }
+
+        public boolean isNewerThanCurrent() {
+            return this.compareTo(new bmVersion(BuildConfig.VERSION_NAME)) == 1;
+        }
+
+        public boolean isBeta() {
+            return this.beta;
+        }
+
+        public AlertDialog.Builder buildWindow(SharedPreferences prefs) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
+            builder.setTitle("Доступна новая версия!");
+            builder.setMessage("Версия: " + this.get() +
+                    "\nРазмер файла: "+(this.size/1024/1024)+"Мб" +
+                    "\n\nЧто нового: "+this.changeLog);
+
+            builder.setPositiveButton("Скачать", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    ctx.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl)));
+                }
+            });
+            builder.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            builder.setNeutralButton("Не проверять обновления", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean("askForUpdates", false);
+                    editor.apply();
+                    ctx.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(ctx, "Проверка обновлений отключена.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+
+            return builder;
+        }
     }
 }
