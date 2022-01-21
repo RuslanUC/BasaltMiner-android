@@ -58,6 +58,20 @@
                 android:id="@+id/sm_faqButton"
                 android:onClick="settingsButton"/> <!-- FAQ -->
 
+            <View
+                android:layout_width="1dp"
+                android:layout_height="10dp"
+                android:layout_weight="1" /> <!-- Padding -->
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button"
+                android:text="Оффлайн режим"
+                android:textSize="20dp"
+                android:id="@+id/sm_offlinemodeButton"
+                android:onClick="modeButton"/> <!-- Online/Offline mode -->
+
         </LinearLayout>
 
     </ScrollView>

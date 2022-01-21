@@ -69,6 +69,8 @@ public class GameClient {
     private final double k;
     private double bk = 1;
     private long _bk;
+    private boolean offlineMode;
+    private offline offline;
 
     private long count;
     private int world;
@@ -141,9 +143,13 @@ public class GameClient {
 
     public GameClient(String jwt, AppCompatActivity context) {
         this.jwt = jwt;
+        this.offlineMode = jwt == null;
         this.ctx = context;
+        if (offlineMode)
+            this.offline = new offline(ctx);
+        else
+            checkUpdates();
         this.k = 128.0 / (context.getWindowManager().getDefaultDisplay().getHeight() / 4);
-        checkUpdates();
     }
 
     public void initViews(ConstraintLayout gameCL, TextView goldTV, TextView redstoneTV, TextView lvlTV, ImageView blockIV, FrameLayout blockFL, WebView loadingWebView) {
@@ -333,6 +339,16 @@ public class GameClient {
     }
 
     private void makeRequest(String path, YEPRunnable doneCallback, YEPRunnable failCallback) {
+        if (this.offlineMode) {
+            String data;
+            try {
+                data = offline.processOfflineModeRequest(path);
+            } catch (JSONException e) {
+                return;
+            }
+            doneCallback.init(data).run();
+            return;
+        }
         if (!path.contains("auth")) {
             if (path.contains("?"))
                 path += "&c=" + count;
@@ -781,7 +797,7 @@ public class GameClient {
                         t.setMargins(0, 0, 0, getSizeInDP(25));
                         mlay.setLayoutParams(t);
                         mlay.setOrientation(LinearLayout.VERTICAL);
-                        mlay.setBackgroundResource(R.drawable.menu_bg);
+                        mlay.setBackground(ResourcesCompat.getDrawable(ctx.getResources(), R.drawable.menu_bg, null));
                         mlay.setPadding(getSizeInDP(25), 0, getSizeInDP(25), 0);
 
                         LinearLayout tlay = new LinearLayout(ctx);
@@ -869,6 +885,8 @@ public class GameClient {
     }
 
     private void hideLoading() {
+        if (offlineMode)
+            return;
         ctx.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -883,6 +901,8 @@ public class GameClient {
     }
 
     private void showLoading() {
+        if (offlineMode)
+            return;
         ctx.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -934,19 +954,19 @@ public class GameClient {
                         JSONObject ver = releases.getJSONObject(i);
                         JSONObject apk = ver.getJSONArray("assets").getJSONObject(0);
                         bmVersion bmv = new bmVersion(ver.getString("tag_name"), ver.getString("body"), ver.getBoolean("prerelease"), apk.getString("browser_download_url"), apk.getLong("size"));
-                        if(bmv.isBeta() && !prefs.getBoolean("askForBetaUpdates", false))
+                        if (bmv.isBeta() && !prefs.getBoolean("askForBetaUpdates", false))
                             continue;
-                        if(bmv.isNewerThanCurrent())
+                        if (bmv.isNewerThanCurrent())
                             versions.add(bmv);
                     } catch (JSONException e) {
                         e.printStackTrace();
                         continue;
                     }
                 }
-                if(versions.size() == 0)
+                if (versions.size() == 0)
                     return;
                 Collections.sort(versions);
-                bmVersion lastVersion = versions.get(versions.size()-1);
+                bmVersion lastVersion = versions.get(versions.size() - 1);
                 ctx.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -1266,6 +1286,9 @@ public class GameClient {
                     gold = upd.getString("money");
                     redstone = upd.getString("points");
                     statpoints = json.getInt("statpoints");
+                    strengthLevel = 0;
+                    dexterityLevel = 0;
+                    intelligenceLevel = 0;
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -1460,6 +1483,10 @@ public class GameClient {
     }
 
     public void loadDuelMenu() {
+        if (offlineMode) {
+            Toast.makeText(ctx, "В оффлайн-режиме дуели отключены.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (level < 10) {
             Toast.makeText(ctx, "Уровень должен быть больше 10!", Toast.LENGTH_SHORT).show();
             return;
@@ -1745,8 +1772,8 @@ public class GameClient {
             AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
             builder.setTitle("Доступна новая версия!");
             builder.setMessage("Версия: " + this.get() +
-                    "\nРазмер файла: "+(this.size/1024/1024)+"Мб" +
-                    "\n\nЧто нового: "+this.changeLog);
+                    "\nРазмер файла: " + (this.size / 1024 / 1024) + "Мб" +
+                    "\n\nЧто нового: " + this.changeLog);
 
             builder.setPositiveButton("Скачать", new DialogInterface.OnClickListener() {
                 @Override

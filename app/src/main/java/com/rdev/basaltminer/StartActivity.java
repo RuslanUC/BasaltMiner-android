@@ -8,11 +8,13 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -22,6 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +44,14 @@ public class StartActivity extends AppCompatActivity {
         prefs = getSharedPreferences("settings", Context.MODE_PRIVATE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
+
+        if (prefs.getBoolean("offlineMode", false)) {
+            Intent i = new Intent(StartActivity.this, MainActivity.class);
+            i.putExtra("offlineMode", true);
+            startActivity(i);
+            finish();
+            return;
+        }
 
         loadingWebView = findViewById(R.id.loadingWebView);
         loadingWebView.getSettings().setJavaScriptEnabled(true);
@@ -101,6 +112,12 @@ public class StartActivity extends AppCompatActivity {
                     }
                 });
             }
+
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (error.getDescription().equals("net::ERR_NAME_NOT_RESOLVED"))
+                    showOfflineModeButton();
+            }
         });
 
         if (prefs.getString("token", null) == null)
@@ -131,6 +148,9 @@ public class StartActivity extends AppCompatActivity {
                 Response response;
                 try {
                     response = client.newCall(request).execute();
+                } catch (UnknownHostException _e) {
+                    showOfflineModeButton();
+                    return;
                 } catch (IOException e) {
                     e.printStackTrace();
                     return;
@@ -233,5 +253,25 @@ public class StartActivity extends AppCompatActivity {
                 loadingWebView.startAnimation(anim);
             }
         });
+    }
+
+    private void showOfflineModeButton() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), "Нет интернет соединения. Вы можете перейти в оффлайн режим.", Toast.LENGTH_LONG).show();
+                findViewById(R.id.offlineModeLay).setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    public void offlineModeButton(View _) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("offlineMode", true);
+        editor.apply();
+        Intent i = new Intent(StartActivity.this, MainActivity.class);
+        i.putExtra("offlineMode", true);
+        startActivity(i);
+        finish();
     }
 }

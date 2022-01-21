@@ -2,6 +2,8 @@ package com.rdev.basaltminer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -11,6 +13,7 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,17 +24,20 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 @SuppressLint("ClickableViewAccessibility")
 public class MainActivity extends AppCompatActivity {
     private EditText dlogin;
     private GameClient gclient;
     private WebView loadingWebView;
+    private boolean offlineMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +62,16 @@ public class MainActivity extends AppCompatActivity {
         loadingWebView.setHapticFeedbackEnabled(false);
 
         String jwt = getIntent().getExtras().getString("jwt");
+        offlineMode = getIntent().getExtras().getBoolean("offlineMode") || jwt == null;
+        ((Button)findViewById(R.id.settings_menu).findViewById(R.id.sm_offlinemodeButton)).setText(offlineMode ? "Онлайн режим" : "Оффлайн режим");
+        SharedPreferences prefs = getSharedPreferences("settings", Context.MODE_PRIVATE);
+        if(offlineMode && prefs.getBoolean("offlineModeFirstRun", true)) {
+            Toast.makeText(getApplicationContext(), "Вы используете оффлайн режим впервые. Прогресс не будет сохранён на сервере, только на этом устройстве.\n" +
+                    "Вернуться в онлайн режим можно через настройки.", Toast.LENGTH_LONG).show();
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("offlineModeFirstRun", false);
+            editor.apply();
+        }
 
         ConstraintLayout layout = findViewById(R.id.main_activity);
         ImageView block = findViewById(R.id.block);
@@ -233,6 +249,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void showShopMenu(View v) {
         gclient.loadShopMenu();
+    }
+
+    public void modeButton(View v) {
+        SharedPreferences prefs = getSharedPreferences("settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("offlineMode", !offlineMode);
+        editor.apply();
+        startActivity(new Intent(MainActivity.this, StartActivity.class));
+        finish();
     }
 
     private class WebAppInterface {
