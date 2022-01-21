@@ -201,7 +201,6 @@ public class offline {
     }
 
     private long getStreamersIncome(int minutes) throws JSONException {
-        Log.d("rdev", minutes + "");
         return new Streamers(playerData.getString("streamers", "[0,0,0,0]")).getTotalIncome() * minutes;
     }
 
