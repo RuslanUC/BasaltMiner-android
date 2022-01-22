@@ -1,32 +1,16 @@
 package com.rdev.basaltminer;
 
-/*
-mine/reward - done
-world/select - done
-ext/auth - done
-upgrade/income - done
-upgrade/level - done
-upgrade/levelup - done
-upgrade/bibaup - done
-upgrade/statadd - done
-upgrade/statdis - done
-upgrade/faq - done
-world/list - done
-top/list - done
-upgrade/list - done
-upgrade/streamerup -
-*/
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -182,14 +166,41 @@ public class offline {
             return "???";
     }
 
-    private long getLevelPrice() {
-        long n = 10;
+    private String formatNumber(BigDecimal num) {
+        if (num.compareTo(new BigDecimal(Math.pow(10, 3))) <= 0)
+            return new DecimalFormat("#.#").format(num).replace(",", ".");
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 6))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 3))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 3))).setScale(1, RoundingMode.HALF_UP) + "K";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 9))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 6))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 6))).setScale(1, RoundingMode.HALF_UP) + "M";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 12))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 9))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 9))).setScale(1, RoundingMode.HALF_UP) + "n";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 15))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 12))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 12))).setScale(1, RoundingMode.HALF_UP) + "T";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 18))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 15))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 15))).setScale(1, RoundingMode.HALF_UP) + "Q";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 21))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 18))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 18))).setScale(1, RoundingMode.HALF_UP) + "E";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 24))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 21))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 21))).setScale(1, RoundingMode.HALF_UP) + "Z";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 27))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 24))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 24))).setScale(1, RoundingMode.HALF_UP) + "Y";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 30))) <= 0 && num.compareTo(new BigDecimal(Math.pow(10, 27))) >= 0)
+            return num.divide(new BigDecimal(Math.pow(10, 27))).setScale(1, RoundingMode.HALF_UP) + "O";
+        else if (num.compareTo(new BigDecimal(Math.pow(10, 30))) >= 0)
+            return "Много";
+        else
+            return "???";
+    }
+
+    private BigDecimal getLevelPrice() {
+        BigDecimal n = new BigDecimal(10);
         int cl = playerData.getInt("level", 1) - 1;
         for (int l = 0; l < cl; l++) {
             if (l % 5 != 0)
-                n *= 2;
+                n = n.multiply(new BigDecimal(2));
             else
-                n *= 1.5;
+                n = n.multiply(new BigDecimal(1.5));
         }
         return n;
     }
@@ -200,16 +211,24 @@ public class offline {
         return bibaPercentage.get(playerData.getInt("biba", 0) + 1);
     }
 
-    private long getStreamersIncome(int minutes) throws JSONException {
-        return new Streamers(playerData.getString("streamers", "[0,0,0,0]")).getTotalIncome() * minutes;
+    private BigDecimal getStreamersIncome(int minutes) throws JSONException {
+        return new Streamers(playerData.getString("streamers", "[0,0,0,0]")).getTotalIncome().multiply(new BigDecimal(minutes));
     }
 
-    private long getStreamersIncome() throws JSONException {
+    private BigDecimal getStreamersIncome() throws JSONException {
         return getStreamersIncome(1);
     }
 
     private boolean worldAvailable(int id) {
         return id <= 17 && id > 0 && playerData.getInt("level", 1) >= worlds.get(id - 1).min_level;
+    }
+
+    private BigDecimal getBigDec(String key, String def) {
+        return new BigDecimal(this.playerData.getString(key, def));
+    }
+
+    private void putBigDec(String key, BigDecimal value) {
+        playerDataEditor.putString(key, value.toString());
     }
 
     private Map<String, String> parseQuery(String url) {
@@ -224,20 +243,20 @@ public class offline {
     private String mine_reward() throws JSONException {
         int block = playerData.getInt("block", 1);
         int bonus = Math.random() <= 0.13 ? 10 : 1;
-        float gold = playerData.getFloat("gold", 0);
+        BigDecimal gold = getBigDec("gold", "0");
         float boost = playerData.getFloat("boost", 1);
-        gold += block * boost * bonus * 0.1;
+        gold = gold.add(new BigDecimal(block * boost * bonus * 0.1));
         block = getBlock();
 
-        gold += getStreamersIncome((int) ((System.currentTimeMillis() - playerData.getLong("lastStreamersIncome", System.currentTimeMillis())) / 1000 / 60));
+        gold = gold.add(getStreamersIncome((int) ((System.currentTimeMillis() - playerData.getLong("lastStreamersIncome", System.currentTimeMillis())) / 1000 / 60)));
 
         playerDataEditor.putInt("block", block);
-        playerDataEditor.putFloat("gold", gold);
+        putBigDec("gold", gold);
         playerDataEditor.putLong("lastStreamersIncome", System.currentTimeMillis());
         playerDataEditor.apply();
 
         int finalBlock = block;
-        float finalGold = gold;
+        BigDecimal finalGold = gold;
         return new JSONObject() {{
             put("block", finalBlock);
             put("time", getBlockBreakTime());
@@ -258,7 +277,7 @@ public class offline {
             put("point", 2);
             put("update", new JSONObject() {{
                 put("time", System.currentTimeMillis());
-                put("money", formatNumber(playerData.getFloat("gold", 0)));
+                put("money", formatNumber(getBigDec("gold", "0")));
                 put("points", 0);
             }});
         }}.toString();
@@ -339,7 +358,7 @@ public class offline {
                 put(new JSONArray() {{
                     put(new JSONArray() {{
                         put("yep");
-                        put(Math.round(playerData.getFloat("gold", 0)));
+                        put(formatNumber(getBigDec("gold", "0")));
                     }});
                 }});
                 put(new JSONArray() {{
@@ -383,26 +402,26 @@ public class offline {
 
     private String upgrade_levelup() throws JSONException {
         int level = playerData.getInt("level", 1);
-        float gold = playerData.getFloat("gold", 0);
+        BigDecimal gold = getBigDec("gold", "0");
         int statPoints = playerData.getInt("statpoints", 0);
-        if (gold < getLevelPrice())
+        if (gold.compareTo(getLevelPrice()) < 0)
             return new JSONObject() {{
                 put("code", 2);
             }}.toString();
-        gold -= getLevelPrice();
+        gold = gold.subtract(getLevelPrice());
         level++;
-        playerDataEditor.putFloat("gold", gold);
+        putBigDec("gold", gold);
         playerDataEditor.putInt("level", level);
         playerDataEditor.putInt("statpoints", statPoints + 1);
         playerDataEditor.apply();
         int breakTime = getBlockBreakTime();
-        float finalGold = gold;
         int finalLevel = level;
+        BigDecimal finalGold = gold;
         return new JSONObject() {{
             put("code", 1);
             put("cost", new JSONArray() {{
                 put(finalLevel);
-                put(getLevelPrice());
+                put(formatNumber(getLevelPrice()));
             }});
             put("time", breakTime);
             put("update", new JSONObject() {{
@@ -540,15 +559,15 @@ public class offline {
         int sid = Integer.parseInt(q.get("id"));
         if (sid > 3 || sid < 0)
             return "";
-        float gold = playerData.getFloat("gold", 0);
+        BigDecimal gold = getBigDec("gold", "0");
         Streamers streamers = new Streamers(playerData.getString("streamers", "[0,0,0,0]"));
-        if (!streamers.canBeUpgraded(sid, (long) gold))
+        if (!streamers.canBeUpgraded(sid, gold))
             return new JSONObject() {{
                 put("code", 1);
             }}.toString();
-        gold -= streamers.getCost(sid);
+        gold = gold.subtract(streamers.getCost(sid));
         streamers.upgrade(sid);
-        playerDataEditor.putFloat("gold", gold);
+        putBigDec("gold", gold);
         playerDataEditor.putString("streamers", streamers.exportLevels());
         playerDataEditor.apply();
         return new JSONObject() {{
@@ -585,7 +604,7 @@ public class offline {
             st[3] = new Streamer(3, s.getInt(3), "Zakviel", 10000000000000L, 10000000);
         }
 
-        public boolean canBeUpgraded(int id, long gold) {
+        public boolean canBeUpgraded(int id, BigDecimal gold) {
             return st[id].canBeUpgraded(gold);
         }
 
@@ -609,15 +628,15 @@ public class offline {
             return toJSONArray().toString();
         }
 
-        public long getTotalIncome() {
-            long i = 0;
+        public BigDecimal getTotalIncome() {
+            BigDecimal i = new BigDecimal(0);
             for (Streamer s : st) {
-                i += s.getIncome();
+                i = i.add(s.getIncome());
             }
             return i;
         }
 
-        public long getCost(int id) {
+        public BigDecimal getCost(int id) {
             return st[id].getCost();
         }
 
@@ -635,25 +654,25 @@ public class offline {
         public int count;
         public String name;
 
-        private long def_cost;
-        private long def_income;
+        private BigDecimal def_cost;
+        private BigDecimal def_income;
 
         public Streamer(int id, int count, String name, long def_cost, long def_income) {
             this.id = id;
             this.count = count;
             this.name = name;
-            this.def_cost = def_cost;
-            this.def_income = def_income;
+            this.def_cost = new BigDecimal(def_cost);
+            this.def_income = new BigDecimal(def_income);
         }
 
-        public long getCost() {
-            return def_cost * (count + 1);
+        public BigDecimal getCost() {
+            return def_cost.multiply(new BigDecimal(count + 1));
         }
 
-        private long getIncomeForCount(int c) {
+        private BigDecimal getIncomeForCount(int c) {
             if (c == 0)
-                return 0;
-            return (long) (def_income * (Math.pow(1.5, c)));
+                return new BigDecimal(0);
+            return def_income.multiply(new BigDecimal(Math.pow(1.5, c)));
         }
 
         public JSONArray toJSONArray() {
@@ -668,15 +687,15 @@ public class offline {
             }};
         }
 
-        public boolean canBeUpgraded(long gold) {
-            return gold >= getCost();
+        public boolean canBeUpgraded(BigDecimal gold) {
+            return getCost().compareTo(gold) <= 0;
         }
 
         public void upgrade() {
             this.count++;
         }
 
-        public long getIncome() {
+        public BigDecimal getIncome() {
             return getIncomeForCount(count);
         }
     }
