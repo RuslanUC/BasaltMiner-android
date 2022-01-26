@@ -557,6 +557,7 @@ public class GameClient {
     }
 
     private void changeWorld(int w) {
+        showLoading();
         makeRequest("world/select?id=" + w, new YEPRunnable() {
             @Override
             public void run() {
@@ -572,6 +573,7 @@ public class GameClient {
                 setBackground();
                 setBlock();
                 wm_behaviour.setState(BottomSheetBehavior.STATE_HIDDEN);
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -582,6 +584,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[19] Не изменить шахту, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
@@ -710,6 +713,7 @@ public class GameClient {
     }
 
     private void acceptDuel(int uid, int idx) {
+        showLoading();
         makeRequest("duel/accept?id=" + uid, new YEPRunnable() {
             @Override
             public void run() {
@@ -728,6 +732,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
 
@@ -741,6 +746,7 @@ public class GameClient {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -751,11 +757,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[22] Не удалось отправить запрос, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     private void declineDuel(int uid, int idx, int a) {
+        showLoading();
         makeRequest("duel/decline?id=" + uid, new YEPRunnable() {
             @Override
             public void run() {
@@ -764,6 +772,7 @@ public class GameClient {
                 else
                     myrequests.remove(idx);
                 setDuels();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -774,6 +783,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[23] Не удалось отменить запрос, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
@@ -1141,6 +1151,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
                     level = json.getJSONArray("cost").getInt(0);
@@ -1190,6 +1201,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
                     biba = json.getJSONArray("cost").getInt(0);
@@ -1219,6 +1231,7 @@ public class GameClient {
     }
 
     public void upgradeStat(int stat) {
+        showLoading();
         makeRequest("upgrade/statadd?id=" + stat, new YEPRunnable() {
             @Override
             public void run() {
@@ -1236,6 +1249,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
                     JSONArray stats = json.getJSONArray("stats");
@@ -1247,6 +1261,7 @@ public class GameClient {
                     e.printStackTrace();
                 }
                 updateLevelMenu();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1257,11 +1272,13 @@ public class GameClient {
                         Toast.makeText(ctx, "[13] Не удалось повысить уровень, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
 
     public void resetStats() {
+        showLoading();
         makeRequest("upgrade/statdis", new YEPRunnable() {
             @Override
             public void run() {
@@ -1280,6 +1297,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
                     JSONObject upd = json.getJSONObject("update");
@@ -1294,6 +1312,7 @@ public class GameClient {
                 }
                 setValues();
                 updateLevelMenu();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1304,6 +1323,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[15] Не удалось сбросить характеристики, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
@@ -1569,6 +1589,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
                     duelTotal++;
@@ -1622,6 +1643,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
                     myrequests.put(json.getJSONArray("request"));
@@ -1674,6 +1696,7 @@ public class GameClient {
     }
 
     public void buyStreamer(int streamerID) {
+        showLoading();
         makeRequest("upgrade/streamerup?id=" + streamerID, new YEPRunnable() {
             @Override
             public void run() {
@@ -1692,6 +1715,7 @@ public class GameClient {
                                 }
                             }
                         });
+                        hideLoading();
                         return;
                     }
                     streamers.put(streamerID, data.getJSONArray("info"));
@@ -1703,6 +1727,7 @@ public class GameClient {
                 }
                 setValues();
                 setStreamersList();
+                hideLoading();
             }
         }, new YEPRunnable() {
             @Override
@@ -1713,6 +1738,7 @@ public class GameClient {
                         Toast.makeText(ctx, "[29] Не удалось увеличить уровень, код: " + resp.code(), Toast.LENGTH_SHORT).show();
                     }
                 });
+                hideLoading();
             }
         });
     }
