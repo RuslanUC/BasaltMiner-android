@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.webkit.CookieManager;
@@ -22,9 +23,11 @@ import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -191,6 +194,18 @@ public class StartActivity extends AppCompatActivity {
                     return;
                 }
 
+                try {
+                    jwt = checkToken(jwt, json);
+                } catch (JSONException | IOException e) {
+                    StartActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(StartActivity.this, "[4.1] Неизвестная ошибка: " + e + ".", Toast.LENGTH_SHORT).show();
+                            webView.loadUrl("https://twitch.tv/login");
+                        }
+                    });
+                    return;
+                }
 
                 String finalJwt = jwt;
                 StartActivity.this.runOnUiThread(new Runnable() {
@@ -204,6 +219,47 @@ public class StartActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    private String checkToken(String jwt, JSONArray json) throws JSONException, IOException {
+        JSONObject j = new JSONObject(new String(Base64.decode(jwt.split("\\.")[1], Base64.URL_SAFE), StandardCharsets.UTF_8));
+        if(j.getBoolean("is_unlinked")) {
+            String extension_id = json.getJSONObject(0).getJSONObject("data").getJSONObject("user").getJSONObject("channel").getJSONArray("selfInstalledExtensions").getJSONObject(0).getJSONObject("token").getString("extensionID");
+            OkHttpClient client = new OkHttpClient();
+            RequestBody body = RequestBody.create(MediaType.parse("application/json"), "{\"query\": \"mutation LinkUserMutation($channelID: ID! $extensionID: ID! $token: String! $showUser: Boolean!) {extensionLinkUser(input: {channelID: $channelID, extensionID: $extensionID, jwt: $token, showUser: $showUser,}) {token {extensionID jwt}helixToken {jwt}}}\",\"variables\": {\"channelID\": \""+CONFIG.streamer_id+"\",\"extensionID\": \""+extension_id+"\",\"token\": \""+jwt+"\",\"showUser\": true}}");
+            Request request = new Request.Builder()
+                    .url("https://gql.twitch.tv/gql")
+                    .addHeader("Authorization", "OAuth " + prefs.getString("token", null))
+                    .addHeader("Client-Id", "kimne78kx3ncx6brgo4mv6wki5h1ko")
+                    .post(body)
+                    .build();
+
+            Response response;
+            response = client.newCall(request).execute();
+            if (response.code() == 401) {
+                StartActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(StartActivity.this, "[3.1] Ошибка получения данных, пожалуйста, авторизуйтесь. (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                        webView.loadUrl("https://twitch.tv/login");
+                    }
+                });
+                return null;
+            } else if (response.code() != 200) {
+                StartActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(StartActivity.this, "[2.1] Неизвестный код ошибки: " + response.code() + ".", Toast.LENGTH_SHORT).show();
+                        webView.loadUrl("https://twitch.tv/login");
+                    }
+                });
+                return null;
+            }
+            JSONObject nj;
+            nj = new JSONObject(response.body().string());
+            return nj.getJSONObject("data").getJSONObject("extensionLinkUser").getJSONObject("token").getString("jwt");
+        }
+        return jwt;
     }
 
     private String getCookie(String siteName, String cookieName) {
