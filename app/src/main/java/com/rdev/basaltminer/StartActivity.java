@@ -39,7 +39,7 @@ import okhttp3.Response;
 
 public class StartActivity extends AppCompatActivity {
     private WebView webView;
-    private WebView loadingWebView;
+    private LoadingView loadingWebView;
     private SharedPreferences prefs;
 
     @Override
@@ -57,11 +57,7 @@ public class StartActivity extends AppCompatActivity {
         }
 
         loadingWebView = findViewById(R.id.loadingWebView);
-        loadingWebView.getSettings().setJavaScriptEnabled(true);
-        loadingWebView.setWebViewClient(new WebViewClient());
-        loadingWebView.addJavascriptInterface(new WebAppInterface(), "Android");
-        loadingWebView.loadUrl("file:///android_asset/index.html");
-        loadingWebView.setBackgroundColor(Color.parseColor("#80000000"));
+        loadingWebView.init(this);
 
         webView = findViewById(R.id.webView);
         Matcher m = Pattern.compile("Chrome\\/\\d+").matcher(webView.getSettings().getUserAgentString());
@@ -95,7 +91,7 @@ public class StartActivity extends AppCompatActivity {
             }
 
             public void onPageFinished(WebView view, String url) {
-                hideLoading();
+                loadingWebView.hide();
                 if (!url.contains("twitch.tv"))
                     webView.loadUrl("https://twitch.tv/login");
                 String token = getCookie("https://twitch.tv", "auth-token");
@@ -111,7 +107,7 @@ public class StartActivity extends AppCompatActivity {
                 StartActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        showLoading();
+                        loadingWebView.show();
                     }
                 });
             }
@@ -277,38 +273,6 @@ public class StartActivity extends AppCompatActivity {
             }
         }
         return CookieValue;
-    }
-
-    public class WebAppInterface {
-        @JavascriptInterface
-        public void hideLoading() {
-            StartActivity.this.hideLoading();
-        }
-    }
-
-    private void hideLoading() {
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
-                anim.setDuration(1000);
-                loadingWebView.startAnimation(anim);
-                loadingWebView.setVisibility(View.INVISIBLE);
-            }
-        });
-    }
-
-    private void showLoading() {
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                loadingWebView.loadUrl("file:///android_asset/index.html");
-                loadingWebView.setVisibility(View.VISIBLE);
-                AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-                anim.setDuration(1000);
-                loadingWebView.startAnimation(anim);
-            }
-        });
     }
 
     private void showOfflineModeButton() {

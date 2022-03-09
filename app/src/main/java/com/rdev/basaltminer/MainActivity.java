@@ -36,7 +36,7 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
     private EditText dlogin;
     private GameClient gclient;
-    private WebView loadingWebView;
+    private LoadingView loadingWebView;
     private boolean offlineMode;
 
     @Override
@@ -47,19 +47,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.coord_layout);
 
         loadingWebView = findViewById(R.id.loadingWebView);
-        loadingWebView.getSettings().setJavaScriptEnabled(true);
-        loadingWebView.setWebViewClient(new WebViewClient());
-        loadingWebView.addJavascriptInterface(new WebAppInterface(), "Android");
-        loadingWebView.loadUrl("file:///android_asset/index.html");
-        loadingWebView.setBackgroundColor(Color.parseColor("#80000000"));
-        loadingWebView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                return true;
-            }
-        });
-        loadingWebView.setLongClickable(false);
-        loadingWebView.setHapticFeedbackEnabled(false);
+        loadingWebView.init(this);
 
         String jwt = getIntent().getExtras().getString("jwt");
         offlineMode = getIntent().getExtras().getBoolean("offlineMode") || jwt == null;
@@ -108,22 +96,13 @@ public class MainActivity extends AppCompatActivity {
         gclient.auth(new Runnable() {
             @Override
             public void run() {
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        hideLoading();
-                    }
-                });
+                loadingWebView.hide();
             }
         }, new Runnable() {
             @Override
             public void run() {
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        showLoading(false);
-                    }
-                });
+                loadingWebView.show();
+                loadingWebView.fail();
             }
         });
         View view = this.getCurrentFocus();
@@ -258,48 +237,5 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
         startActivity(new Intent(MainActivity.this, StartActivity.class));
         finish();
-    }
-
-    private class WebAppInterface {
-        @JavascriptInterface
-        public void hideLoading() {
-            MainActivity.this.hideLoading();
-        }
-    }
-
-    private void hideLoading() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                AlphaAnimation anim = new AlphaAnimation(1.0f, 0.0f);
-                anim.setDuration(1000);
-                loadingWebView.startAnimation(anim);
-                loadingWebView.setVisibility(View.INVISIBLE);
-            }
-        });
-    }
-
-    private void showLoading(boolean success) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                loadingWebView.loadUrl("file:///android_asset/index.html");
-                loadingWebView.setWebViewClient(new WebViewClient() {
-                    @Override
-                    public void onPageFinished(WebView web, String url) {
-                        if (!success)
-                            web.loadUrl("javascript:fail()");
-                    }
-                });
-                loadingWebView.setVisibility(View.VISIBLE);
-                AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-                anim.setDuration(1000);
-                loadingWebView.startAnimation(anim);
-            }
-        });
-    }
-
-    private void showLoading() {
-        showLoading(true);
     }
 }
